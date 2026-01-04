@@ -416,3 +416,18 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Backend
+agent_server/.venv
+agent_server/.env
+__pycache__/
+*.py[cod]
+
+# Frontend
+zen_extension/node_modules
+zen_extension/dist
+zen_extension/.vite
+*.tsbuildinfo
+
+# System
+.DS_Store
