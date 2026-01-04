@@ -1,0 +1,427 @@
+/* ============================================
+   CSS Variables
+   ============================================ */
+:root {
+  /* Modern "Coffee & Earth" Palette */
+  --color-bg: #1c1917;
+  /* Deep Espresso */
+  --color-surf-1: #292524;
+  /* Dark Mocha */
+  --color-surf-2: #44403c;
+  /* Stone/Earth */
+
+  --color-text: #f5f5f4;
+  /* Warm White */
+  --color-text-muted: #a8a29e;
+  /* Warm Gray */
+  --color-border: #44403c;
+  /* Stone */
+
+  /* Accents */
+  --color-primary: #d4a373;
+  /* Light Brown / Caramel */
+  --color-primary-hover: #e9c496;
+  /* Lighter Brown */
+  --color-accent: #b45309;
+  /* Amber/Bronze for highlights if needed */
+
+  --color-success: #15803d;
+  /* Muted Green */
+  --color-error: #b91c1c;
+  /* Deep Red */
+  --color-warning: #b45309;
+  /* Bronze */
+
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+
+  --spacing-xs: 6px;
+  --spacing-sm: 10px;
+  --spacing-md: 16px;
+  --spacing-lg: 20px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+
+  /* Shadows/Glass */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --glass-bg: rgba(28, 25, 23, 0.85);
+  /* Warm dark foam */
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================
+   App Layout
+   ============================================ */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ============================================
+   Header
+   ============================================ */
+.header {
+  padding: var(--spacing-md);
+  background: var(--color-surf-1);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.header-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ============================================
+   Chat
+   ============================================ */
+.chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+}
+
+.chat__empty {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--spacing-lg);
+  margin-top: 20px;
+  opacity: 0.7;
+}
+
+/* ============================================
+   Chat Message
+   ============================================ */
+.chat-message {
+  margin-bottom: var(--spacing-md);
+  line-height: 1.5;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  max-width: 90%;
+  font-size: 13.5px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-message--user {
+  background: var(--color-surf-2);
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+  color: #fff;
+}
+
+.chat-message--agent {
+  background: transparent;
+  align-self: flex-start;
+  padding: 0;
+  margin-left: 0;
+  max-width: 100%;
+}
+
+.chat-message__role {
+  font-weight: 600;
+  margin-right: var(--spacing-xs);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.chat-message--user .chat-message__role {
+  display: none;
+  /* Hide 'YOU' label for cleaner bubbles */
+}
+
+.chat-message__content {
+  word-break: break-word;
+}
+
+/* ============================================
+   Plan Viewer
+   ============================================ */
+.plan-viewer {
+  background: var(--color-surf-1);
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-md);
+  flex-shrink: 0;
+  max-height: 35vh;
+  overflow-y: auto;
+  /* Glass effect */
+  background: linear-gradient(180deg, var(--color-surf-1) 0%, var(--color-bg) 100%);
+}
+
+.plan-viewer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.plan-viewer__title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.plan-viewer__button {
+  padding: 6px 12px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.plan-viewer__button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.plan-viewer__button:disabled {
+  background: var(--color-surf-2);
+  color: var(--color-text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.plan-viewer__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-viewer__empty {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  padding: 10px;
+  font-style: italic;
+}
+
+/* ============================================
+   Step Item
+   ============================================ */
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--color-surf-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.step-item__icon {
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.step-item__number {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  font-size: 11px;
+  min-width: 15px;
+}
+
+.step-item__details {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-item__note {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+/* Step status styles */
+.step-item--running {
+  border-color: var(--color-primary);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.step-item--running .step-item__icon {
+  color: var(--color-primary);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
+}
+
+.step-item--completed {
+  background: transparent;
+  opacity: 0.7;
+  border-color: transparent;
+}
+
+.step-item--completed .step-item__icon {
+  color: var(--color-primary);
+}
+
+.step-item--completed .step-item__details {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.step-item--failed {
+  border-color: var(--color-error);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.step-item--failed .step-item__icon {
+  color: var(--color-error);
+}
+
+/* ============================================
+   Composer
+   ============================================ */
+.composer {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.composer__input {
+  flex: 1;
+  padding: 10px;
+  background: var(--color-surf-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-text);
+  resize: none;
+  min-height: 42px;
+  transition: border-color 0.2s;
+}
+
+.composer__input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+.composer__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.composer__button {
+  padding: 0 var(--spacing-lg);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.composer__button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.composer__button:disabled {
+  background: var(--color-surf-2);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}

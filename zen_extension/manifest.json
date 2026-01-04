@@ -1,0 +1,35 @@
+{
+    "manifest_version": 2,
+    "name": "Zen Tab Agent (Sidebar)",
+    "version": "0.1.0",
+    "description": "Sidebar agent that reads/acts inside the current tab.",
+    "permissions": [
+        "activeTab",
+        "tabs",
+        "storage",
+        "<all_urls>",
+        "http://127.0.0.1/*"
+    ],
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "contentScript.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "sidebar_action": {
+        "default_title": "Zen Agent",
+        "default_panel": "dist/sidebar.html",
+        "open_at_install": true
+    },
+    "content_security_policy": "script-src 'self'; object-src 'self'"
+}
