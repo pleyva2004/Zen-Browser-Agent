@@ -1,4 +1,4 @@
-import type { Step } from "./plan";
+import type { Step } from "./index";
 
 // ============================================
 // OUTGOING MESSAGES (Sidebar -> Background)

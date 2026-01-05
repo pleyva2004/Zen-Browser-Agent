@@ -91,6 +91,12 @@ body {
   gap: 4px;
 }
 
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .header-title {
   font-size: 16px;
   font-weight: 700;
@@ -101,6 +107,41 @@ body {
 .header-subtitle {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+/* Connection Status */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surf-2);
+  transition: all 0.2s;
+}
+
+.connection-status[role="button"] {
+  cursor: pointer;
+}
+
+.connection-status[role="button"]:hover {
+  background: var(--color-border);
+}
+
+.connection-status .pulse {
+  animation: pulse 1s infinite;
+}
+
+.status-label {
+  display: none;
+}
+
+@media (min-width: 300px) {
+  .status-label {
+    display: inline;
+  }
 }
 
 /* ============================================
@@ -425,3 +466,6 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
 }
+
+
+

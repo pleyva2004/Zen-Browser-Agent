@@ -21,7 +21,14 @@ export function App() {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
     // Agent hook for communication
-    const { steps, isLoading, sendRequest, runNextStep } = useAgent();
+    const {
+        steps,
+        isLoading,
+        sendRequest,
+        runNextStep,
+        connectionStatus,
+        checkServerHealth
+    } = useAgent();
 
     /**
      * Add a message to the chat
@@ -78,14 +85,20 @@ export function App() {
 
     return (
         <div className="app">
-            <Header />
+            <Header
+                connectionStatus={connectionStatus}
+                onRetryConnection={checkServerHealth}
+            />
             <Chat messages={messages} />
             <PlanViewer
                 steps={steps}
                 onRunNext={handleRunNext}
                 isLoading={isLoading}
             />
-            <Composer onSend={handleSend} disabled={isLoading} />
+            <Composer
+                onSend={handleSend}
+                disabled={isLoading || connectionStatus === "disconnected"}
+            />
         </div>
     );
 }

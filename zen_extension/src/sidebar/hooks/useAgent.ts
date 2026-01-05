@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useBrowserRuntime } from "./useBrowserRuntime";
 import type {
     Step,
@@ -7,13 +7,28 @@ import type {
     StepResultResponse,
 } from "../types";
 
+// Connection status type
+type ConnectionStatus = "disconnected" | "connecting" | "connected";
+
+// Health check response
+interface HealthCheckResponse {
+    healthy: boolean;
+    version?: string;
+    error?: string;
+}
+
 /**
  * Hook that manages agent communication and plan execution state
  *
  * @returns Object with state and action functions
  *
  * @example
- * const { steps, isLoading, sendRequest, runNextStep } = useAgent();
+ * const { steps, isLoading, sendRequest, runNextStep, connectionStatus } = useAgent();
+ *
+ * // Check connection status
+ * if (connectionStatus === "disconnected") {
+ *   await checkServerHealth();
+ * }
  *
  * // Send a request
  * const response = await sendRequest("search for cats");
@@ -31,8 +46,64 @@ export function useAgent() {
     // Loading state for async operations
     const [isLoading, setIsLoading] = useState(false);
 
+    // Connection status - start as "connecting" to show we're checking on mount
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
+
     // Get the messaging function
     const { sendMessage } = useBrowserRuntime();
+
+    /**
+     * Check if the server is healthy
+     */
+    const checkServerHealth = useCallback(async (): Promise<boolean> => {
+        try {
+            console.log("[useAgent] Starting health check...");
+            setConnectionStatus("connecting");
+
+            const response = await sendMessage<HealthCheckResponse>({
+                type: "CHECK_SERVER_HEALTH",
+            });
+
+            console.log("[useAgent] Health check response:", response);
+
+            if (response && response.healthy) {
+                console.log("[useAgent] Server is healthy, version:", response.version);
+                setConnectionStatus("connected");
+                return true;
+            } else {
+                const errorMsg = response?.error || "Unknown error";
+                console.warn("[useAgent] Server health check failed:", errorMsg);
+                setConnectionStatus("disconnected");
+                return false;
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("[useAgent] Health check error:", errorMessage, error);
+            setConnectionStatus("disconnected");
+            return false;
+        }
+    }, [sendMessage]);
+
+    /**
+     * Check server health on mount and periodically
+     */
+    useEffect(() => {
+        console.log("[useAgent] Component mounted, running initial health check...");
+
+        // Initial health check - run immediately on mount
+        checkServerHealth();
+
+        // Periodic health check every 30 seconds
+        const interval = setInterval(() => {
+            console.log("[useAgent] Running periodic health check...");
+            checkServerHealth();
+        }, 30000);
+
+        return () => {
+            console.log("[useAgent] Component unmounting, clearing health check interval");
+            clearInterval(interval);
+        };
+    }, [checkServerHealth]);
 
     /**
      * Send a goal to the agent and receive a plan
@@ -40,6 +111,7 @@ export function useAgent() {
     const sendRequest = useCallback(
         async (text: string): Promise<PlanResponse> => {
             setIsLoading(true);
+            setConnectionStatus("connecting");
 
             try {
                 // Send request to background script
@@ -52,7 +124,19 @@ export function useAgent() {
                 if (response.error) {
                     setSteps([]);
                     setCurrentIndex(0);
+                    // Check if it's a connection error
+                    if (response.error.includes("Cannot connect") ||
+                        response.error.includes("server")) {
+                        setConnectionStatus("disconnected");
+                    }
                     return response;
+                }
+
+                // Update connection status from response
+                if ((response as any).connectionStatus) {
+                    setConnectionStatus((response as any).connectionStatus);
+                } else {
+                    setConnectionStatus("connected");
                 }
 
                 // Transform steps to include status
@@ -72,6 +156,7 @@ export function useAgent() {
                 // Return error response
                 const errorMessage =
                     error instanceof Error ? error.message : String(error);
+                setConnectionStatus("disconnected");
                 return {
                     summary: "",
                     steps: [],
@@ -153,6 +238,7 @@ export function useAgent() {
     const hasStepsRemaining = currentIndex < steps.length;
     const allStepsComplete =
         steps.length > 0 && steps.every((s) => s.status === "completed");
+    const isConnected = connectionStatus === "connected";
 
     return {
         // State
@@ -161,10 +247,13 @@ export function useAgent() {
         isLoading,
         hasStepsRemaining,
         allStepsComplete,
+        connectionStatus,
+        isConnected,
 
         // Actions
         sendRequest,
         runNextStep,
         reset,
+        checkServerHealth,
     };
 }
