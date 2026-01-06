@@ -1,8 +1,10 @@
 """
 Local LLM planner strategy.
 
-Uses a local LLM (e.g., Ollama) to generate plans.
+Uses a local LLM (e.g., LM Studio, Ollama) to generate plans.
 Useful for offline/private operation.
+
+Supports OpenAI-compatible chat completions API format.
 """
 
 import json
@@ -19,7 +21,8 @@ class LocalPlanner(BasePlanner):
     """
     Planner using a local LLM.
 
-    Connects to a local LLM API (e.g., Ollama) running on localhost.
+    Connects to a local LLM API (e.g., LM Studio, Ollama) running on localhost.
+    Uses OpenAI-compatible chat completions API format.
     Configure LOCAL_MODEL_URL and LOCAL_MODEL_NAME in environment.
     """
 
@@ -28,7 +31,7 @@ class LocalPlanner(BasePlanner):
         settings = get_settings()
         self.url = settings.local_model_url
         self.model = settings.local_model_name
-        self.client = httpx.AsyncClient(timeout=60.0)
+        self.client = httpx.AsyncClient(timeout=120.0)  # Longer timeout for local LLMs
 
     async def plan(self, request: PlanRequest) -> PlanResponse:
         """
@@ -44,21 +47,26 @@ class LocalPlanner(BasePlanner):
             system_prompt = get_planning_prompt()
             user_message = self._build_user_message(request)
 
-            full_prompt = f"{system_prompt}\n\n{user_message}"
-
+            # Use OpenAI-compatible chat completions format
             response = await self.client.post(
                 self.url,
                 json={
                     "model": self.model,
-                    "prompt": full_prompt,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_message},
+                    ],
+                    "temperature": 0.3,  # Lower temp for more consistent JSON
+                    "max_tokens": 1024,
                     "stream": False,
-                    "format": "json",
                 },
             )
             response.raise_for_status()
 
             data = response.json()
-            return self._parse_response(data.get("response", ""))
+            # Extract content from OpenAI-compatible response format
+            content = data["choices"][0]["message"]["content"]
+            return self._parse_response(content)
 
         except Exception as e:
             return PlanResponse(
@@ -91,7 +99,17 @@ Generate a plan to achieve the user's goal.
     def _parse_response(self, text: str) -> PlanResponse:
         """Parse local LLM's response into a PlanResponse."""
         try:
-            data = json.loads(text)
+            # Strip markdown code blocks if present
+            cleaned = text.strip()
+            if cleaned.startswith("```json"):
+                cleaned = cleaned[7:]
+            elif cleaned.startswith("```"):
+                cleaned = cleaned[3:]
+            if cleaned.endswith("```"):
+                cleaned = cleaned[:-3]
+            cleaned = cleaned.strip()
+
+            data = json.loads(cleaned)
 
             steps = [
                 Step(
@@ -110,9 +128,9 @@ Generate a plan to achieve the user's goal.
                 steps=steps,
             )
 
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
             return PlanResponse(
-                summary="Failed to parse local LLM's response.",
+                summary=f"Failed to parse LLM response as JSON.",
                 steps=[],
-                error="Invalid JSON in response",
+                error=f"Invalid JSON: {str(e)}. Raw response: {text[:200]}",
             )

@@ -1,12 +1,26 @@
+import { ProviderSelector } from "./ProviderSelector";
+import type { Provider } from "../types";
+
 interface HeaderProps {
     connectionStatus?: "disconnected" | "connecting" | "connected";
     onRetryConnection?: () => void;
+    providers: Provider[];
+    selectedProvider: Provider;
+    onProviderChange: (provider: Provider) => void;
+    isLoading?: boolean;
 }
 
 /**
- * Header component displaying the app title, subtitle, and connection status
+ * Header component displaying the app title, subtitle, connection status, and provider selector
  */
-export function Header({ connectionStatus = "disconnected", onRetryConnection }: HeaderProps) {
+export function Header({
+    connectionStatus = "disconnected",
+    onRetryConnection,
+    providers,
+    selectedProvider,
+    onProviderChange,
+    isLoading = false,
+}: HeaderProps) {
     const statusConfig = {
         disconnected: { color: "#ef4444", label: "Disconnected", icon: "●" },
         connecting: { color: "#f59e0b", label: "Connecting...", icon: "◐" },
@@ -32,7 +46,15 @@ export function Header({ connectionStatus = "disconnected", onRetryConnection }:
                     <span className="status-label">{status.label}</span>
                 </div>
             </div>
-            <p className="header-subtitle">Plan → Run next → Observe</p>
+            <div className="header-controls">
+                <p className="header-subtitle">Plan → Run next → Observe</p>
+                <ProviderSelector
+                    providers={providers}
+                    selectedProvider={selectedProvider}
+                    onProviderChange={onProviderChange}
+                    disabled={isLoading || connectionStatus !== "connected"}
+                />
+            </div>
         </header>
     );
 }

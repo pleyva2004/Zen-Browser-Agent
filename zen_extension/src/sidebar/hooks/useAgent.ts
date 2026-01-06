@@ -5,6 +5,7 @@ import type {
     StepWithStatus,
     PlanResponse,
     StepResultResponse,
+    Provider,
 } from "../types";
 
 // Connection status type
@@ -14,6 +15,13 @@ type ConnectionStatus = "disconnected" | "connecting" | "connected";
 interface HealthCheckResponse {
     healthy: boolean;
     version?: string;
+    error?: string;
+}
+
+// Providers response
+interface ProvidersResponse {
+    providers: string[];
+    default: string;
     error?: string;
 }
 
@@ -85,6 +93,57 @@ export function useAgent() {
     }, [sendMessage]);
 
     /**
+     * Fetch available providers from the server
+     */
+    const fetchProviders = useCallback(async (): Promise<ProvidersResponse> => {
+        try {
+            console.log("[useAgent] Fetching providers...");
+            const response = await sendMessage<ProvidersResponse>({
+                type: "GET_PROVIDERS",
+            });
+            console.log("[useAgent] Providers response:", response);
+            return response;
+        } catch (error) {
+            console.error("[useAgent] Failed to fetch providers:", error);
+            return {
+                providers: ["rule_based"],
+                default: "rule_based",
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    }, [sendMessage]);
+
+    /**
+     * Test a specific provider with a simple prompt
+     */
+    const testProvider = useCallback(async (provider: Provider): Promise<{
+        success: boolean;
+        provider: string;
+        error?: string;
+    }> => {
+        try {
+            console.log("[useAgent] Testing provider:", provider);
+            const response = await sendMessage<{
+                success: boolean;
+                provider: string;
+                error?: string;
+            }>({
+                type: "TEST_PROVIDER",
+                provider,
+            });
+            console.log("[useAgent] Provider test result:", response);
+            return response;
+        } catch (error) {
+            console.error("[useAgent] Provider test failed:", error);
+            return {
+                success: false,
+                provider,
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    }, [sendMessage]);
+
+    /**
      * Check server health on mount and periodically
      */
     useEffect(() => {
@@ -109,15 +168,16 @@ export function useAgent() {
      * Send a goal to the agent and receive a plan
      */
     const sendRequest = useCallback(
-        async (text: string): Promise<PlanResponse> => {
+        async (text: string, provider?: Provider): Promise<PlanResponse> => {
             setIsLoading(true);
             setConnectionStatus("connecting");
 
             try {
-                // Send request to background script
+                // Send request to background script with optional provider
                 const response = await sendMessage<PlanResponse>({
                     type: "AGENT_REQUEST",
                     text,
+                    provider,
                 });
 
                 // Handle error response
@@ -255,5 +315,7 @@ export function useAgent() {
         runNextStep,
         reset,
         checkServerHealth,
+        fetchProviders,
+        testProvider,
     };
 }

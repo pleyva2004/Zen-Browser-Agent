@@ -1,10 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAgent } from "./hooks/useAgent";
 import { Header } from "./components/Header";
 import { Chat } from "./components/Chat";
 import { PlanViewer } from "./components/PlanViewer";
 import { Composer } from "./components/Composer";
-import type { ChatMessage } from "./types";
+import type { ChatMessage, Provider } from "./types";
 
 /**
  * Generate a unique ID for messages
@@ -20,6 +20,11 @@ export function App() {
     // Chat message history
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+    // Provider state
+    const [selectedProvider, setSelectedProvider] = useState<Provider>("rule_based");
+    const [providers, setProviders] = useState<Provider[]>(["rule_based"]);
+    const [isTestingProvider, setIsTestingProvider] = useState(false);
+
     // Agent hook for communication
     const {
         steps,
@@ -27,8 +32,21 @@ export function App() {
         sendRequest,
         runNextStep,
         connectionStatus,
-        checkServerHealth
+        checkServerHealth,
+        fetchProviders,
+        testProvider,
     } = useAgent();
+
+    // Fetch providers when connected
+    useEffect(() => {
+        if (connectionStatus === "connected") {
+            fetchProviders().then((response) => {
+                if (response.providers && response.providers.length > 0) {
+                    setProviders(response.providers as Provider[]);
+                }
+            });
+        }
+    }, [connectionStatus, fetchProviders]);
 
     /**
      * Add a message to the chat
@@ -44,6 +62,32 @@ export function App() {
     }, []);
 
     /**
+     * Handle provider selection change - test provider before switching
+     */
+    const handleProviderChange = useCallback(
+        async (newProvider: Provider) => {
+            // Skip test for rule_based (always works)
+            if (newProvider === "rule_based") {
+                setSelectedProvider(newProvider);
+                return;
+            }
+
+            // Test the provider
+            setIsTestingProvider(true);
+            const result = await testProvider(newProvider);
+            setIsTestingProvider(false);
+
+            if (result.success) {
+                setSelectedProvider(newProvider);
+            } else {
+                // Provider test failed - show error and keep current provider
+                addMessage("agent", `Provider "${newProvider}" is not available: ${result.error || "Unknown error"}`);
+            }
+        },
+        [testProvider, addMessage]
+    );
+
+    /**
      * Handle sending a user goal
      */
     const handleSend = useCallback(
@@ -51,8 +95,8 @@ export function App() {
             // Add user message
             addMessage("user", text);
 
-            // Send to agent
-            const response = await sendRequest(text);
+            // Send to agent with selected provider
+            const response = await sendRequest(text, selectedProvider);
 
             // Add agent response
             if (response.error) {
@@ -61,7 +105,7 @@ export function App() {
                 addMessage("agent", response.summary || "Plan ready.");
             }
         },
-        [addMessage, sendRequest]
+        [addMessage, sendRequest, selectedProvider]
     );
 
     /**
@@ -88,6 +132,10 @@ export function App() {
             <Header
                 connectionStatus={connectionStatus}
                 onRetryConnection={checkServerHealth}
+                providers={providers}
+                selectedProvider={selectedProvider}
+                onProviderChange={handleProviderChange}
+                isLoading={isLoading || isTestingProvider}
             />
             <Chat messages={messages} />
             <PlanViewer

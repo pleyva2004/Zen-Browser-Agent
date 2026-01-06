@@ -44,8 +44,9 @@ class Settings(BaseSettings):
     # LLM Configuration
     # ===========================================
 
-    default_provider: Provider = "rule_based"
+    default_provider: Provider = "local"
     """Default LLM provider to use when not specified in request."""
+    # temp changing to local
 
     anthropic_model: str = "claude-sonnet-4-20250514"
     """Anthropic model to use for planning."""
@@ -56,10 +57,10 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-1.5-pro"
     """Google Gemini model to use for planning."""
 
-    local_model_url: str = "http://localhost:11434/api/generate"
-    """URL for local LLM API (e.g., Ollama)."""
+    local_model_url: str = "http://localhost:1234/v1/chat/completions"
+    """URL for local LLM API (LLM STUDIO)."""
 
-    local_model_name: str = "llama3"
+    local_model_name: str = "openai/gpt-oss-20b"
     """Model name for local LLM."""
 
     # ===========================================

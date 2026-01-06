@@ -7,12 +7,6 @@ to ensure consistent output format.
 
 
 def get_planning_prompt() -> str:
-    """
-    Get the system prompt for planning.
-
-    Returns:
-        The system prompt string.
-    """
     return """You are a browser automation assistant. Your job is to analyze a user's goal and the current page state, then generate a plan of actions to achieve that goal.
 
 ## Available Tools

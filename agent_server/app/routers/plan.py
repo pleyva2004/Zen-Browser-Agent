@@ -5,22 +5,32 @@ Handles the POST /plan endpoint for generating execution plans.
 """
 
 import logging
+from typing import Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.config import Settings, get_settings
-from app.planner.base import BasePlanner
+from app.config import Settings, get_settings, Provider
 from app.planner.factory import create_planner
-from app.schemas import PlanRequest, PlanResponse
+from app.schemas import PlanRequest, PlanResponse, PageSnapshot
 
 router = APIRouter(tags=["planning"])
 logger = logging.getLogger(__name__)
 
 
+class TestProviderRequest(BaseModel):
+    """Request body for testing a provider."""
+    provider: Provider
+
+
+class TestProviderResponse(BaseModel):
+    """Response from testing a provider."""
+    success: bool
+    provider: str
+    error: Optional[str] = None
+
+
 @router.post("/plan", response_model=PlanResponse)
-async def create_plan(
-    request: PlanRequest,
-    settings: Settings = Depends(get_settings),
-) -> PlanResponse:
+async def create_plan( request: PlanRequest, settings: Settings = Depends(get_settings) ) -> PlanResponse:
     """
     Generate an execution plan for the user's request.
 
@@ -45,6 +55,13 @@ async def create_plan(
     """
     # Determine provider
     provider = request.provider or settings.default_provider
+
+    print("Inside of API REQUEST")
+    print(f"Provider being used: {provider}")
+    print("userRequest:", request.userRequest)
+    print("page URL:", request.page.url)
+
+
 
     try:
         # Get planner
@@ -132,3 +149,75 @@ async def list_providers(
         "providers": ["rule_based", "anthropic", "openai", "gemini", "local"],
         "default": settings.default_provider,
     }
+
+
+@router.post("/test-provider", response_model=TestProviderResponse)
+async def test_provider(request: TestProviderRequest) -> TestProviderResponse:
+    """
+    Test a provider with a simple prompt to verify it's working.
+
+    Sends a minimal request to the provider to check:
+    - API key is valid
+    - Model is accessible
+    - Provider can generate a response
+
+    Args:
+        request: Contains the provider name to test.
+        settings: Application settings (injected).
+
+    Returns:
+        TestProviderResponse with success status and any error message.
+    """
+    provider = request.provider
+    logger.info(f"Testing provider: {provider}")
+
+    try:
+        # Get the planner for this provider
+        planner = create_planner(provider)
+
+        # Create a minimal test request
+        test_request = PlanRequest(
+            userRequest="Respond with the word OK",
+            page=PageSnapshot(
+                url="https://test.example.com",
+                title="Test Page",
+                text="",
+                candidates=[]
+            )
+        )
+
+        # Try to generate a plan
+        response = await planner.plan(test_request)
+
+        # Check if we got a valid response
+        if response.error:
+            logger.warning(f"Provider {provider} test failed: {response.error}")
+            return TestProviderResponse(
+                success=False,
+                provider=provider,
+                error=response.error
+            )
+
+        logger.info(f"Provider {provider} test succeeded")
+        return TestProviderResponse(
+            success=True,
+            provider=provider
+        )
+
+    except ValueError as e:
+        # Invalid provider name
+        logger.error(f"Invalid provider {provider}: {str(e)}")
+        return TestProviderResponse(
+            success=False,
+            provider=provider,
+            error=f"Invalid provider: {str(e)}"
+        )
+
+    except Exception as e:
+        # Provider failed
+        logger.error(f"Provider {provider} test error: {str(e)}")
+        return TestProviderResponse(
+            success=False,
+            provider=provider,
+            error=str(e)
+        )

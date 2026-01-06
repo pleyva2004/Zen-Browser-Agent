@@ -138,20 +138,20 @@ async function callAgentServer(payload, maxRetries = 3) {
         try {
             const startTime = Date.now();
 
-            const r = await fetchWithTimeout("http://127.0.0.1:8765/plan", {
+            const response = await fetchWithTimeout("http://127.0.0.1:8765/plan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
-            }, 30000);
+            }, 60000);
 
             const elapsed = Date.now() - startTime;
 
-            if (!r.ok) {
+            if (!response.ok) {
                 const errorText = await r.text().catch(() => "Unknown error");
                 throw new Error(`Server returned ${r.status}: ${errorText}`);
             }
 
-            const result = await r.json();
+            const result = await response.json();
 
             connectionStatus = "connected";
             recordSuccess();
@@ -246,16 +246,63 @@ browser.runtime.onMessage.addListener(async (msg) => {
 
 
 
+        // Fetch available providers from server
+        if (msg.type === "GET_PROVIDERS") {
+            log("info", "Fetching available providers");
+            try {
+                const r = await fetchWithTimeout("http://127.0.0.1:8765/providers", {}, 5000);
+                if (r.ok) {
+                    const data = await r.json();
+                    log("info", "Providers fetched", { providers: data.providers, default: data.default });
+                    return { providers: data.providers, default: data.default };
+                } else {
+                    log("warn", "Failed to fetch providers", { status: r.status });
+                    return { providers: ["rule_based"], default: "rule_based", error: "Failed to fetch providers" };
+                }
+            } catch (e) {
+                log("error", "Error fetching providers", { error: e.message });
+                return { providers: ["rule_based"], default: "rule_based", error: e.message };
+            }
+        }
+
+        // Test a specific provider with a simple prompt
+        if (msg.type === "TEST_PROVIDER") {
+            const provider = msg.provider;
+            log("info", "Testing provider", { provider });
+
+            try {
+                const r = await fetchWithTimeout("http://127.0.0.1:8765/test-provider", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ provider })
+                }, 30000); // 30 second timeout for LLM test
+
+                if (r.ok) {
+                    const data = await r.json();
+                    log("info", "Provider test result", { provider, success: data.success, error: data.error });
+                    return data;
+                } else {
+                    const errorText = await r.text().catch(() => "Unknown error");
+                    log("warn", "Provider test HTTP error", { provider, status: r.status, error: errorText });
+                    return { success: false, provider, error: `Server error: ${r.status}` };
+                }
+            } catch (e) {
+                log("error", "Provider test failed", { provider, error: e.message });
+                return { success: false, provider, error: e.message };
+            }
+        }
+
         // Main planning request
         if (msg.type === "AGENT_REQUEST") {
             const tab = await getActiveTab();
-            log("info", "Agent request received", { text: msg.text, tabUrl: tab?.url });
+            log("info", "Agent request received", { text: msg.text, provider: msg.provider, tabUrl: tab?.url });
 
             // Check for restricted URLs
             if (!tab.url || tab.url.startsWith("about:") || tab.url.startsWith("moz-extension:") || tab.url.startsWith("view-source:") || tab.url.startsWith("chrome:")) {
                 return { error: "I cannot run on this page. Please try a normal website (e.g. google.com)." };
             }
 
+            // Begin Construction the payload for the API
             const page = await callContent(tab.id, { tool: "EXTRACT" });
             log("info", "Page extracted", { url: page.url, candidatesCount: page.candidates?.length });
 
@@ -264,7 +311,8 @@ browser.runtime.onMessage.addListener(async (msg) => {
             const plan = await callAgentServer({
                 userRequest: msg.text,
                 page,
-                screenshotDataUrl
+                screenshotDataUrl,
+                provider: msg.provider || null  // Include provider in server request
             });
 
             planState = { steps: plan.steps || [], idx: 0, summary: plan.summary || "" };
