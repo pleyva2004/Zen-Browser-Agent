@@ -6,53 +6,66 @@ interface Props {
 }
 
 /**
- * Get status icon for a step
+ * Get action icon based on tool type
  */
-function getStatusIcon(status: StepWithStatus["status"]): string {
-    switch (status) {
-        case "pending":
-            return "○";
-        case "running":
+function getActionIcon(tool: string, status: StepWithStatus["status"]): string {
+    // Show checkmark for completed steps
+    if (status === "completed") return "✓";
+    // Show X for failed steps
+    if (status === "failed") return "✗";
+
+    // Show tool-specific icon for pending/running
+    switch (tool) {
+        case "CLICK":
+            return "⊙";
+        case "TYPE":
+            return "⌨";
+        case "SCROLL":
+            return "↕";
+        case "NAVIGATE":
+            return "→";
+        default:
             return "●";
-        case "completed":
-            return "✓";
-        case "failed":
-            return "✗";
     }
 }
 
 /**
- * Format step details for display
+ * Format step details for display (human-readable)
  */
 function formatStepDetails(step: StepWithStatus): string {
     switch (step.tool) {
         case "CLICK":
-            return `CLICK ${step.selector ? `(${step.selector})` : ""}`;
+            return step.note || `Click ${step.selector || "element"}`;
         case "TYPE":
-            return `TYPE "${step.text?.slice(0, 30) ?? ""}"${(step.text?.length ?? 0) > 30 ? "..." : ""
-                }`;
+            const text = step.text?.slice(0, 30) ?? "";
+            const ellipsis = (step.text?.length ?? 0) > 30 ? "..." : "";
+            return `Type "${text}${ellipsis}"`;
         case "SCROLL":
-            return `SCROLL (${step.deltaY ?? 0}px)`;
+            const direction = (step.deltaY ?? 0) > 0 ? "down" : "up";
+            return `Scroll ${direction}`;
         case "NAVIGATE":
-            return `NAVIGATE ${step.url ?? ""}`;
+            return `Navigate to ${step.url ?? "page"}`;
         default:
             return step.tool;
     }
 }
 
 /**
- * Displays a single step with status indicator
+ * Displays a single step in timeline format with action icon
  */
-export function StepItem({ step, index }: Props) {
-    const icon = getStatusIcon(step.status);
+export function StepItem({ step }: Props) {
+    const icon = getActionIcon(step.tool, step.status);
     const details = formatStepDetails(step);
 
     return (
         <li className={`step-item step-item--${step.status}`}>
             <span className="step-item__icon">{icon}</span>
-            <span className="step-item__number">{index + 1}.</span>
-            <span className="step-item__details">{details}</span>
-            {step.note && <span className="step-item__note"> — {step.note}</span>}
+            <div className="step-item__content">
+                <span className="step-item__details">{details}</span>
+                {step.note && step.tool !== "CLICK" && (
+                    <span className="step-item__note">{step.note}</span>
+                )}
+            </div>
         </li>
     );
 }

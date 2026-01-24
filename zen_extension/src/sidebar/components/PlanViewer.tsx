@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { StepWithStatus } from "../types";
 import { StepItem } from "./StepItem";
 
@@ -8,9 +9,11 @@ interface Props {
 }
 
 /**
- * Displays the execution plan with steps and run button
+ * Displays the execution plan with collapsible steps and run button
  */
 export function PlanViewer({ steps, onRunNext, isLoading }: Props) {
+    const [isExpanded, setIsExpanded] = useState(true);
+
     // Determine button state
     const hasSteps = steps.length > 0;
     const allComplete = steps.every((s) => s.status === "completed");
@@ -25,10 +28,26 @@ export function PlanViewer({ steps, onRunNext, isLoading }: Props) {
         return "Run next";
     };
 
+    // Count completed steps
+    const completedCount = steps.filter((s) => s.status === "completed").length;
+    const stepsLabel = `${completedCount}/${steps.length} steps`;
+
     return (
         <section className="plan-viewer">
             <div className="plan-viewer__header">
-                <span className="plan-viewer__title">Plan</span>
+                {hasSteps ? (
+                    <button
+                        className="steps-toggle"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                    >
+                        <span>{stepsLabel}</span>
+                        <span className={`steps-toggle__chevron ${!isExpanded ? 'steps-toggle__chevron--collapsed' : ''}`}>
+                            ▾
+                        </span>
+                    </button>
+                ) : (
+                    <span className="plan-viewer__title">Plan</span>
+                )}
                 <button
                     className="plan-viewer__button"
                     onClick={onRunNext}
@@ -39,11 +58,13 @@ export function PlanViewer({ steps, onRunNext, isLoading }: Props) {
             </div>
 
             {hasSteps ? (
-                <ol className="plan-viewer__steps">
-                    {steps.map((step, index) => (
-                        <StepItem key={index} step={step} index={index} />
-                    ))}
-                </ol>
+                isExpanded && (
+                    <ol className="plan-viewer__steps">
+                        {steps.map((step, index) => (
+                            <StepItem key={index} step={step} index={index} />
+                        ))}
+                    </ol>
+                )
             ) : (
                 <div className="plan-viewer__empty">No plan yet.</div>
             )}

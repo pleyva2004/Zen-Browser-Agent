@@ -3,12 +3,14 @@ import { useState, useCallback, type KeyboardEvent, type ChangeEvent } from "rea
 interface Props {
     onSend: (text: string) => void;
     disabled: boolean;
+    isLoading?: boolean;
+    onStop?: () => void;
 }
 
 /**
- * Input component for composing and sending goals
+ * Input component for composing and sending goals with safety controls
  */
-export function Composer({ onSend, disabled }: Props) {
+export function Composer({ onSend, disabled, isLoading = false, onStop }: Props) {
     const [value, setValue] = useState("");
 
     /**
@@ -47,22 +49,61 @@ export function Composer({ onSend, disabled }: Props) {
 
     return (
         <section className="composer">
-            <textarea
-                className="composer__input"
-                value={value}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                placeholder="e.g. search nvidia ignite, click Sign in, scroll down"
-                disabled={disabled}
-                rows={2}
-            />
-            <button
-                className="composer__button"
-                onClick={handleSend}
-                disabled={!canSend}
-            >
-                Send
-            </button>
+            <div className="composer__input-wrapper">
+                <textarea
+                    className="composer__input"
+                    value={value}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Reply to Zen Agent"
+                    disabled={disabled}
+                    rows={2}
+                />
+                <div className="composer__controls">
+                    <button className="composer__safety-dropdown" title="Safety settings">
+                        <span className="composer__safety-icon">☝</span>
+                        <span>Ask before acting</span>
+                        <span>▾</span>
+                    </button>
+                    <div className="composer__action-buttons">
+                        <button
+                            className="composer__icon-btn"
+                            title="Magic wand"
+                            disabled={disabled}
+                        >
+                            ✨
+                        </button>
+                        <button
+                            className="composer__icon-btn"
+                            title="Add attachment"
+                            disabled={disabled}
+                        >
+                            ＋
+                        </button>
+                        {isLoading ? (
+                            <button
+                                className="composer__icon-btn"
+                                title="Stop"
+                                onClick={onStop}
+                            >
+                                ⏹
+                            </button>
+                        ) : (
+                            <button
+                                className="composer__icon-btn composer__icon-btn--send"
+                                onClick={handleSend}
+                                disabled={!canSend}
+                                title="Send message"
+                            >
+                                ↑
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+            <p className="composer__disclaimer">
+                AI can make mistakes. Double-check important actions.
+            </p>
         </section>
     );
 }

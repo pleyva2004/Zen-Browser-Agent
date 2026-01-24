@@ -4,6 +4,7 @@ import { Header } from "./components/Header";
 import { Chat } from "./components/Chat";
 import { PlanViewer } from "./components/PlanViewer";
 import { Composer } from "./components/Composer";
+import { ActivityStatus } from "./components/ActivityStatus";
 import type { ChatMessage, Provider } from "./types";
 
 /**
@@ -127,6 +128,20 @@ export function App() {
         }
     }, [addMessage, runNextStep]);
 
+    /**
+     * Handle starting a new chat
+     */
+    const handleNewChat = useCallback(() => {
+        setMessages([]);
+    }, []);
+
+    // Determine activity status text
+    const getStatusText = (): string => {
+        if (isTestingProvider) return "Testing provider...";
+        if (isLoading) return "Thinking...";
+        return "Working...";
+    };
+
     return (
         <div className="app">
             <Header
@@ -136,8 +151,13 @@ export function App() {
                 selectedProvider={selectedProvider}
                 onProviderChange={handleProviderChange}
                 isLoading={isLoading || isTestingProvider}
+                onNewChat={handleNewChat}
             />
             <Chat messages={messages} />
+            <ActivityStatus
+                isLoading={isLoading || isTestingProvider}
+                statusText={getStatusText()}
+            />
             <PlanViewer
                 steps={steps}
                 onRunNext={handleRunNext}
@@ -146,6 +166,7 @@ export function App() {
             <Composer
                 onSend={handleSend}
                 disabled={isLoading || connectionStatus === "disconnected"}
+                isLoading={isLoading}
             />
         </div>
     );

@@ -2,35 +2,23 @@
    CSS Variables
    ============================================ */
 :root {
-  /* Modern "Coffee & Earth" Palette */
-  --color-bg: #1c1917;
-  /* Deep Espresso */
-  --color-surf-1: #292524;
-  /* Dark Mocha */
-  --color-surf-2: #44403c;
-  /* Stone/Earth */
+  /* Modern Dark Palette with Orange Accent */
+  --color-bg: #1a1a1a;
+  --color-surf-1: #2d2d2d;
+  --color-surf-2: #3a3a3a;
 
-  --color-text: #f5f5f4;
-  /* Warm White */
-  --color-text-muted: #a8a29e;
-  /* Warm Gray */
-  --color-border: #44403c;
-  /* Stone */
+  --color-text: #ffffff;
+  --color-text-muted: #888888;
+  --color-border: #3a3a3a;
 
-  /* Accents */
-  --color-primary: #d4a373;
-  /* Light Brown / Caramel */
-  --color-primary-hover: #e9c496;
-  /* Lighter Brown */
-  --color-accent: #b45309;
-  /* Amber/Bronze for highlights if needed */
+  /* Accents - Orange */
+  --color-primary: #e07a5f;
+  --color-primary-hover: #f09070;
+  --color-accent: #e07a5f;
 
-  --color-success: #15803d;
-  /* Muted Green */
-  --color-error: #b91c1c;
-  /* Deep Red */
-  --color-warning: #b45309;
-  /* Bronze */
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
 
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
   --font-size-sm: 12px;
@@ -46,8 +34,7 @@
 
   /* Shadows/Glass */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --glass-bg: rgba(28, 25, 23, 0.85);
-  /* Warm dark foam */
+  --glass-bg: rgba(26, 26, 26, 0.85);
 }
 
 /* ============================================
@@ -82,66 +69,80 @@ body {
    Header
    ============================================ */
 .header {
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: var(--color-surf-1);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.header-top {
-  display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-brand-icon {
+  font-size: 18px;
+  color: var(--color-primary);
+  cursor: help;
 }
 
 .header-title {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: #fff;
 }
 
-.header-subtitle {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-/* Connection Status */
-.connection-status {
+.header-right {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 4px 8px;
+  gap: 4px;
+}
+
+.header-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
   border-radius: var(--radius-sm);
-  background: var(--color-surf-2);
-  transition: all 0.2s;
-}
-
-.connection-status[role="button"] {
   cursor: pointer;
+  font-size: 16px;
+  transition: all 0.15s;
 }
 
-.connection-status[role="button"]:hover {
-  background: var(--color-border);
+.header-icon-btn:hover {
+  background: var(--color-surf-2);
+  color: var(--color-text);
 }
 
-.connection-status .pulse {
+/* Connection Status - now tooltip on brand icon */
+.header-brand-icon[data-status="connected"] {
+  color: var(--color-primary);
+}
+
+.header-brand-icon[data-status="connecting"] {
+  color: var(--color-warning);
   animation: pulse 1s infinite;
 }
 
-.status-label {
-  display: none;
-}
-
-@media (min-width: 300px) {
-  .status-label {
-    display: inline;
-  }
+.header-brand-icon[data-status="disconnected"] {
+  color: var(--color-error);
+  cursor: pointer;
 }
 
 /* ============================================
@@ -247,18 +248,6 @@ body {
   flex: 1;
 }
 
-/* Header controls row for subtitle + provider */
-.header-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.header-controls .header-subtitle {
-  margin: 0;
-}
 
 /* ============================================
    Chat
@@ -340,166 +329,218 @@ body {
 }
 
 /* ============================================
-   Plan Viewer
+   Plan Card Container
    ============================================ */
-.plan-viewer {
+.plan-card {
   background: var(--color-surf-1);
-  border-top: 1px solid var(--color-border);
-  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-md);
+  overflow: hidden;
   flex-shrink: 0;
-  max-height: 35vh;
+  max-height: 50vh;
   overflow-y: auto;
-  /* Glass effect */
-  background: linear-gradient(180deg, var(--color-surf-1) 0%, var(--color-bg) 100%);
+  animation: fadeIn 0.2s ease-out;
 }
 
-.plan-viewer__header {
+.plan-card__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-sm);
-}
-
-.plan-viewer__title {
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
   font-weight: 600;
-  font-size: 13px;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 14px;
 }
 
-.plan-viewer__button {
-  padding: 6px 12px;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+.plan-card__header-icon {
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+/* Sites Section */
+.plan-card__sites {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.plan-card__sites-label {
   font-size: 12px;
-  font-weight: 600;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-}
-
-.plan-viewer__button:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-}
-
-.plan-viewer__button:disabled {
-  background: var(--color-surf-2);
   color: var(--color-text-muted);
-  box-shadow: none;
-  cursor: not-allowed;
+  margin-bottom: 8px;
 }
 
-.plan-viewer__steps {
+.plan-card__site-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--color-surf-2);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.plan-card__site-icon {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+/* Approach Section */
+.plan-card__approach {
+  padding: 12px 16px;
+}
+
+.plan-card__approach-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+
+.plan-card__steps {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* Action Buttons */
+.plan-card__actions {
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.plan-viewer__empty {
+.plan-card__btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-surf-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.plan-card__btn:hover:not(:disabled) {
+  background: var(--color-border);
+}
+
+.plan-card__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plan-card__btn--primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.plan-card__btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.plan-card__btn-shortcut {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.plan-card__btn--primary .plan-card__btn-shortcut {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Disclaimer */
+.plan-card__disclaimer {
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Empty state */
+.plan-card__empty {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   text-align: center;
-  padding: 10px;
+  padding: 20px 16px;
   font-style: italic;
 }
 
 /* ============================================
-   Step Item
+   Step Item - Numbered Circle Style
    ============================================ */
-.step-item {
+.plan-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.plan-step__number {
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: 8px 10px;
-  font-size: 13px;
+  justify-content: center;
   background: var(--color-surf-2);
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  transition: all 0.2s;
-}
-
-.step-item__icon {
-  width: 16px;
-  text-align: center;
-  flex-shrink: 0;
-  font-weight: bold;
-}
-
-.step-item__number {
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-  font-size: 11px;
-  min-width: 15px;
-}
-
-.step-item__details {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  border-radius: 50%;
   font-size: 12px;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.step-item__note {
+  font-weight: 500;
   color: var(--color-text-muted);
-  font-size: 11px;
-  margin-left: 4px;
+  flex-shrink: 0;
 }
 
-/* Step status styles */
-.step-item--running {
-  border-color: var(--color-primary);
-  background: rgba(139, 92, 246, 0.1);
+.plan-step__text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  padding-top: 2px;
+  color: var(--color-text);
 }
 
-.step-item--running .step-item__icon {
-  color: var(--color-primary);
-  animation: pulse 1s infinite;
+/* Pending state */
+.plan-step--pending {
+  opacity: 0.7;
+}
+
+/* Running state */
+.plan-step--running .plan-step__number {
+  background: var(--color-primary);
+  color: white;
+  animation: pulse-glow 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0% {
-    opacity: 0.5;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
-.step-item--completed {
-  background: transparent;
-  opacity: 0.7;
-  border-color: transparent;
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(224, 122, 95, 0.2); }
+  50% { box-shadow: 0 0 0 4px rgba(224, 122, 95, 0.4); }
 }
 
-.step-item--completed .step-item__icon {
-  color: var(--color-primary);
+/* Completed state */
+.plan-step--completed .plan-step__number {
+  background: var(--color-success);
+  color: white;
 }
 
-.step-item--completed .step-item__details {
-  text-decoration: line-through;
-  opacity: 0.7;
+.plan-step--completed .plan-step__text {
+  color: var(--color-text-muted);
 }
 
-.step-item--failed {
-  border-color: var(--color-error);
-  background: rgba(239, 68, 68, 0.1);
+/* Failed state */
+.plan-step--failed .plan-step__number {
+  background: var(--color-error);
+  color: white;
 }
 
-.step-item--failed .step-item__icon {
+.plan-step--failed .plan-step__text {
   color: var(--color-error);
 }
 
@@ -508,31 +549,42 @@ body {
    ============================================ */
 .composer {
   display: flex;
-  gap: var(--spacing-sm);
+  flex-direction: column;
+  gap: 8px;
   padding: var(--spacing-md);
   background: var(--color-bg);
   border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
-.composer__input {
-  flex: 1;
-  padding: 10px;
+.composer__input-wrapper {
+  display: flex;
+  flex-direction: column;
   background: var(--color-surf-1);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s;
+}
+
+.composer__input-wrapper:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(224, 122, 95, 0.15);
+}
+
+.composer__input {
+  flex: 1;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
   font-family: inherit;
   font-size: 13px;
   color: var(--color-text);
   resize: none;
-  min-height: 42px;
-  transition: border-color 0.2s;
+  min-height: 44px;
 }
 
 .composer__input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
 .composer__input:disabled {
@@ -540,6 +592,91 @@ body {
   cursor: not-allowed;
 }
 
+.composer__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.composer__safety-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.composer__safety-dropdown:hover {
+  background: var(--color-surf-2);
+  color: var(--color-text);
+}
+
+.composer__safety-icon {
+  font-size: 12px;
+}
+
+.composer__action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.composer__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+
+.composer__icon-btn:hover:not(:disabled) {
+  background: var(--color-surf-2);
+  color: var(--color-text);
+}
+
+.composer__icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.composer__icon-btn--send {
+  background: var(--color-primary);
+  color: white;
+}
+
+.composer__icon-btn--send:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.composer__icon-btn--send:disabled {
+  background: var(--color-surf-2);
+  color: var(--color-text-muted);
+}
+
+.composer__disclaimer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+/* Legacy button styles (keep for compatibility) */
 .composer__button {
   padding: 0 var(--spacing-lg);
   background: var(--color-primary);
@@ -563,6 +700,29 @@ body {
   background: var(--color-surf-2);
   color: var(--color-text-muted);
   cursor: not-allowed;
+}
+
+/* ============================================
+   Activity Status
+   ============================================ */
+.activity-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.activity-status__icon {
+  color: var(--color-primary);
+  font-size: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Scrollbar Styling */
