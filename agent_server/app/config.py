@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     local_model_name: str = "openai/gpt-oss-20b"
     """Model name for local LLM."""
 
+    vision_model_name: str = "qwen2-vl-2b-instruct"
+    """Model name for Vision Model."""
+
     # ===========================================
     # Server Configuration
     # ===========================================

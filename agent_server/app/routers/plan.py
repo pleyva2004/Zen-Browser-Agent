@@ -60,6 +60,7 @@ async def create_plan( request: PlanRequest, settings: Settings = Depends(get_se
     print(f"Provider being used: {provider}")
     print("userRequest:", request.userRequest)
     print("page URL:", request.page.url)
+    print("page text:", request.page.text)
 
 
 
@@ -136,9 +137,7 @@ async def _fallback_to_rule_based(request: PlanRequest, original_error: str) -> 
 
 
 @router.get("/providers")
-async def list_providers(
-    settings: Settings = Depends(get_settings),
-) -> dict:
+async def list_providers( settings: Settings = Depends(get_settings) ) -> dict:
     """
     List available providers.
 

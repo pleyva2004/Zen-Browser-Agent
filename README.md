@@ -15,7 +15,7 @@ cd agent_server
 python3 -m venv .venv        # Create venv (use python3.9+ if 3.14 fails)
 source .venv/bin/activate    # Activate
 pip install -r requirements.txt
-uvicorn app:app --host 127.0.0.1 --port 8765 --reload
+uvicorn app.main:app --host 127.0.0.1 --port 8765 --reload
 ```
 
 ### 2. Build the Extension (Frontend)
