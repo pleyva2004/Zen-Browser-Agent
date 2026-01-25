@@ -1,73 +1,91 @@
-import { useState } from "react";
 import type { StepWithStatus } from "../types";
 import { StepItem } from "./StepItem";
 
 interface Props {
     steps: StepWithStatus[];
-    onRunNext: () => void;
     isLoading: boolean;
+    onApprove: () => void;
+    onMakeChanges: () => void;
+    currentUrl?: string;
 }
 
 /**
- * Displays the execution plan with collapsible steps and run button
+ * Displays the execution plan in card-style format with numbered steps
  */
-export function PlanViewer({ steps, onRunNext, isLoading }: Props) {
-    const [isExpanded, setIsExpanded] = useState(true);
-
-    // Determine button state
+export function PlanViewer({ steps, isLoading, onApprove, onMakeChanges, currentUrl }: Props) {
     const hasSteps = steps.length > 0;
     const allComplete = steps.every((s) => s.status === "completed");
     const hasFailed = steps.some((s) => s.status === "failed");
-    const canRun = hasSteps && !allComplete && !hasFailed && !isLoading;
+    const canApprove = hasSteps && !allComplete && !hasFailed;
 
-    // Determine button text
-    const getButtonText = (): string => {
-        if (isLoading) return "Running...";
-        if (allComplete) return "Complete";
-        if (hasFailed) return "Failed";
-        return "Run next";
+    // Extract domain from current URL for sites section
+    const getDomain = () => {
+        if (!currentUrl) return "unknown site";
+        try {
+            const url = new URL(currentUrl);
+            return url.hostname.replace(/^www\./, '');
+        } catch (e) {
+            return "unknown site";
+        }
     };
 
-    // Count completed steps
-    const completedCount = steps.filter((s) => s.status === "completed").length;
-    const stepsLabel = `${completedCount}/${steps.length} steps`;
+    const domain = getDomain();
 
     return (
-        <section className="plan-viewer">
-            <div className="plan-viewer__header">
-                {hasSteps ? (
-                    <button
-                        className="steps-toggle"
-                        onClick={() => setIsExpanded(!isExpanded)}
-                    >
-                        <span>{stepsLabel}</span>
-                        <span className={`steps-toggle__chevron ${!isExpanded ? 'steps-toggle__chevron--collapsed' : ''}`}>
-                            ▾
-                        </span>
-                    </button>
-                ) : (
-                    <span className="plan-viewer__title">Plan</span>
-                )}
-                <button
-                    className="plan-viewer__button"
-                    onClick={onRunNext}
-                    disabled={!canRun}
-                >
-                    {getButtonText()}
-                </button>
+        <div className="plan-card">
+            {/* Header */}
+            <div className="plan-card__header">
+                <span className="plan-card__header-icon">☰</span>
+                <span>Zen Agent's plan</span>
             </div>
 
-            {hasSteps ? (
-                isExpanded && (
-                    <ol className="plan-viewer__steps">
+            {/* Sites Section */}
+            <div className="plan-card__sites">
+                <div className="plan-card__sites-label">Allow actions on these sites</div>
+                <div className="plan-card__site-badge">
+                    <span className="plan-card__site-icon">🌐</span>
+                    <span>{domain}</span>
+                </div>
+            </div>
+
+            {/* Approach Section */}
+            <div className="plan-card__approach">
+                <div className="plan-card__approach-label">Approach to follow</div>
+                {hasSteps ? (
+                    <ol className="plan-card__steps">
                         {steps.map((step, index) => (
                             <StepItem key={index} step={step} index={index} />
                         ))}
                     </ol>
-                )
-            ) : (
-                <div className="plan-viewer__empty">No plan yet.</div>
-            )}
-        </section>
+                ) : (
+                    <div className="plan-card__empty">No plan yet.</div>
+                )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="plan-card__actions">
+                <button
+                    className="plan-card__btn plan-card__btn--primary"
+                    onClick={onApprove}
+                    disabled={!canApprove || isLoading}
+                >
+                    <span>Approve plan</span>
+                    <span className="plan-card__btn-shortcut">↵</span>
+                </button>
+                <button
+                    className="plan-card__btn"
+                    onClick={onMakeChanges}
+                    disabled={isLoading}
+                >
+                    <span>Make changes</span>
+                    <span className="plan-card__btn-shortcut">⌘↵</span>
+                </button>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="plan-card__disclaimer">
+                Zen Agent will only use the sites listed. You'll be asked before accessing anything else.
+            </div>
+        </div>
     );
 }

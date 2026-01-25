@@ -1,4 +1,4 @@
-import { useState, useCallback, type KeyboardEvent, type ChangeEvent } from "react";
+import { useState, useCallback, type KeyboardEvent, type ChangeEvent, forwardRef, useImperativeHandle, useRef } from "react";
 
 interface Props {
     onSend: (text: string) => void;
@@ -7,11 +7,22 @@ interface Props {
     onStop?: () => void;
 }
 
-/**
- * Input component for composing and sending goals with safety controls
- */
-export function Composer({ onSend, disabled, isLoading = false, onStop }: Props) {
+export interface ComposerHandle {
+    focus: () => void;
+}
+
+export const Composer = forwardRef<ComposerHandle, Props>(({ onSend, disabled, isLoading = false, onStop }, ref) => {
     const [value, setValue] = useState("");
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Expose focus method to parent
+    useImperativeHandle(ref, () => ({
+        focus: () => {
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+            }
+        }
+    }));
 
     /**
      * Handle input change
@@ -50,15 +61,16 @@ export function Composer({ onSend, disabled, isLoading = false, onStop }: Props)
     return (
         <section className="composer">
             <div className="composer__input-wrapper">
-                <textarea
-                    className="composer__input"
-                    value={value}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Reply to Zen Agent"
-                    disabled={disabled}
-                    rows={2}
-                />
+                 <textarea
+                     ref={textareaRef}
+                     className="composer__input"
+                     value={value}
+                     onChange={handleChange}
+                     onKeyDown={handleKeyDown}
+                     placeholder="Reply to Zen Agent"
+                     disabled={disabled}
+                     rows={2}
+                 />
                 <div className="composer__controls">
                     <button className="composer__safety-dropdown" title="Safety settings">
                         <span className="composer__safety-icon">☝</span>
@@ -104,6 +116,6 @@ export function Composer({ onSend, disabled, isLoading = false, onStop }: Props)
             <p className="composer__disclaimer">
                 AI can make mistakes. Double-check important actions.
             </p>
-        </section>
+         </section>
     );
-}
+});

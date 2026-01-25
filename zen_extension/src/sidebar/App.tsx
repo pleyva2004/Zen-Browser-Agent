@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useAgent } from "./hooks/useAgent";
 import { Header } from "./components/Header";
 import { Chat } from "./components/Chat";
 import { PlanViewer } from "./components/PlanViewer";
-import { Composer } from "./components/Composer";
+import { Composer, type ComposerHandle } from "./components/Composer";
 import { ActivityStatus } from "./components/ActivityStatus";
 import type { ChatMessage, Provider } from "./types";
 
@@ -109,24 +109,40 @@ export function App() {
         [addMessage, sendRequest, selectedProvider]
     );
 
+
+
     /**
-     * Handle running the next step
+     * Handle approving the entire plan
      */
-    const handleRunNext = useCallback(async () => {
-        const result = await runNextStep();
+    const handleApprovePlan = useCallback(async () => {
+        // Run all steps sequentially
+        let result;
+        do {
+            result = await runNextStep();
+            if (result.error) {
+                addMessage("agent", `Error: ${result.error}`);
+                break;
+            }
+            if (result.message) {
+                addMessage("agent", result.message);
+            }
+        } while (!result.done);
 
-        // Add result message
-        if (result.error) {
-            addMessage("agent", `Error: ${result.error}`);
-        } else if (result.message) {
-            addMessage("agent", result.message);
-        }
-
-        // Add completion message
-        if (result.done && !result.error) {
+        if (result?.done && !result?.error) {
             addMessage("agent", "Plan finished.");
         }
     }, [addMessage, runNextStep]);
+
+    /**
+     * Handle making changes to the plan
+     */
+    const composerRef = useRef<ComposerHandle>(null);
+    const handleMakeChanges = useCallback(() => {
+        // Focus the composer input for user to type changes
+        if (composerRef.current) {
+            composerRef.current.focus();
+        }
+    }, []);
 
     /**
      * Handle starting a new chat
@@ -158,12 +174,16 @@ export function App() {
                 isLoading={isLoading || isTestingProvider}
                 statusText={getStatusText()}
             />
-            <PlanViewer
-                steps={steps}
-                onRunNext={handleRunNext}
-                isLoading={isLoading}
-            />
+            {steps.length > 0 && (
+                <PlanViewer
+                    steps={steps}
+                    isLoading={isLoading}
+                    onApprove={handleApprovePlan}
+                    onMakeChanges={handleMakeChanges}
+                />
+            )}
             <Composer
+                ref={composerRef}
                 onSend={handleSend}
                 disabled={isLoading || connectionStatus === "disconnected"}
                 isLoading={isLoading}

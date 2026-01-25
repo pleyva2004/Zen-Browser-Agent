@@ -6,30 +6,6 @@ interface Props {
 }
 
 /**
- * Get action icon based on tool type
- */
-function getActionIcon(tool: string, status: StepWithStatus["status"]): string {
-    // Show checkmark for completed steps
-    if (status === "completed") return "✓";
-    // Show X for failed steps
-    if (status === "failed") return "✗";
-
-    // Show tool-specific icon for pending/running
-    switch (tool) {
-        case "CLICK":
-            return "⊙";
-        case "TYPE":
-            return "⌨";
-        case "SCROLL":
-            return "↕";
-        case "NAVIGATE":
-            return "→";
-        default:
-            return "●";
-    }
-}
-
-/**
  * Format step details for display (human-readable)
  */
 function formatStepDetails(step: StepWithStatus): string {
@@ -51,21 +27,15 @@ function formatStepDetails(step: StepWithStatus): string {
 }
 
 /**
- * Displays a single step in timeline format with action icon
+ * Displays a single step with numbered circle
  */
-export function StepItem({ step }: Props) {
-    const icon = getActionIcon(step.tool, step.status);
+export function StepItem({ step, index }: Props) {
     const details = formatStepDetails(step);
 
     return (
-        <li className={`step-item step-item--${step.status}`}>
-            <span className="step-item__icon">{icon}</span>
-            <div className="step-item__content">
-                <span className="step-item__details">{details}</span>
-                {step.note && step.tool !== "CLICK" && (
-                    <span className="step-item__note">{step.note}</span>
-                )}
-            </div>
+        <li className={`plan-step plan-step--${step.status}`}>
+            <span className="plan-step__number">{index + 1}</span>
+            <span className="plan-step__text">{details}</span>
         </li>
     );
 }
